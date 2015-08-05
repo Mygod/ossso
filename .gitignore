@@ -1,0 +1,4 @@
+.directory
+*.db
+bower_components
+.idea

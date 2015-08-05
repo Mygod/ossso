@@ -1,0 +1,82 @@
+<link rel="import" href="/bower_components/iron-icons/iron-icons.html" />
+<link rel="import" href="/bower_components/iron-pages/iron-pages.html" />
+<link rel="import" href="/bower_components/paper-drawer-panel/paper-drawer-panel.html" />
+<link rel="import" href="/bower_components/paper-header-panel/paper-header-panel.html" />
+<link rel="import" href="/bower_components/paper-icon-button/paper-icon-button.html" />
+<link rel="import" href="/bower_components/paper-item/paper-item.html" />
+<link rel="import" href="/bower_components/paper-menu/paper-menu.html" />
+<link rel="import" href="/bower_components/paper-toolbar/paper-toolbar.html" />
+<link rel="import" href="/bower_components/paper-tooltip/paper-tooltip.html" />
+<dom-module id="ossso-page">
+    <style>
+        paper-drawer-panel .main {
+            background-color: var(--google-grey-100);
+        }
+
+        paper-drawer-panel .nav {
+            border-right: 1px solid var(--google-grey-300);
+        }
+
+        paper-drawer-panel .nav paper-menu {
+            padding: 0;
+        }
+
+        paper-drawer-panel .nav #about {
+            color: var(--google-grey-500);
+            font-size: .8em;
+            padding: 8px 16px;
+        }
+
+        paper-drawer-panel .main paper-icon-button[icon=menu] {
+            margin-right: 8px;
+        }
+
+        paper-drawer-panel iron-pages {
+            margin: 16px;
+        }
+    </style>
+    <template>
+        <paper-drawer-panel>
+            <div class="nav layout vertical" drawer>
+                <paper-menu class="flex" selected="{{currentPage}}">
+                    <content select="paper-item"></content>
+                </paper-menu>
+                <div id="about">Powered by <a href="https://github.com/Mygod/ossso" target="_blank">ossso</a></div>
+            </div>
+            <paper-header-panel class="main" main mode="waterfall">
+                <paper-toolbar>
+                    <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
+                    <span class="flex">[[pageTitle]]</span>
+                    <paper-icon-button id="logout" icon="exit-to-app" on-tap="logout"
+                                       hidden$="[[login]]"></paper-icon-button>
+                    <paper-tooltip for="logout">登出</paper-tooltip>
+                </paper-toolbar>
+                <iron-pages selected="[[currentPage]]">
+                    <content></content>
+                </iron-pages>
+            </paper-header-panel>
+        </paper-drawer-panel>
+        <paper-toast-manager></paper-toast-manager>
+    </template>
+</dom-module>
+<script>
+    Polymer({
+        is: 'ossso-page',
+        properties: {
+            pageTitle: String,
+            login: {
+                type: Boolean,
+                value: false
+            },
+            currentPage: {
+                type: Number,
+                value: 0
+            }
+        },
+        logout: function () {
+            document.cookie = 'uid=; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+            document.cookie = 'password=; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+            location.reload();
+        }
+    });
+</script>

@@ -1,0 +1,44 @@
+<script src="/bower_components/js-sha512/build/sha512.min.js"></script>
+<link rel="import" href="/bower_components/iron-ajax/iron-ajax.html" />
+<link rel="import" href="/bower_components/paper-button/paper-button.html" />
+<link rel="import" href="/bower_components/paper-checkbox/paper-checkbox.html" />
+<link rel="import" href="/bower_components/paper-input/paper-input.html" />
+<link rel="import" href="/bower_components/paper-toast-manager/paper-toast-manager.html" />
+<link rel="import" href="ossso-page.html" />
+<style is="custom-style">
+    :root {
+        @apply(--paper-font-common-base);
+        --primary-text-color: #333;
+    }
+
+    :root pre, :root code, :root kbd, :root samp {
+        @apply(--paper-font-common-code);
+    }
+
+    :root a {
+        color: var(--default-primary-color);
+        text-decoration: none;
+    }
+    :root a:hover {
+        text-shadow: 0 0 5px var(--default-primary-color);
+    }
+
+    :root .text-center {
+        text-align: center;
+    }
+
+    :root .block-center {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    :root paper-button.colored:not([disabled]) {
+        background-color: var(--default-primary-color);
+        color: #fff;
+    }
+
+    /* TODO: https://github.com/PolymerElements/paper-tooltip/issues/3 */
+    :root paper-tooltip {
+        z-index: 99;
+    }
+</style>
