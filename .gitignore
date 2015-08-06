@@ -2,3 +2,4 @@
 *.db
 bower_components
 .idea
+data/words.txt

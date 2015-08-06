@@ -12,6 +12,10 @@ class Db extends SQLite3 {
         $this->open($path);
         if (!$this) $this->selfDestruction();
     }
+
+    function executeWithError(SQLite3Stmt $statement) {
+        return $statement->execute() ? null : $this->lastErrorMsg();
+    }
 }
 
 class Data extends Db {

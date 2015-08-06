@@ -1,0 +1,43 @@
+<link rel="import" href="/bower_components/paper-button/paper-button.html" />
+<dom-module id="ossso-upload-button">
+    <style>
+        #form {
+            display: none;
+        }
+    </style>
+    <template>
+        <form id="form" method="post" action$="[[action]]">
+            <input id="picker" type="file" name="file" on-change="submit" />
+        </form>
+        <paper-button raised on-click="upload">[[buttonText]]</paper-button>
+    </template>
+    <script>
+        Polymer({
+            is: 'ossso-upload-button',
+            properties: {
+                action: String,
+                buttonText: String
+            },
+            upload: function () {
+                this.$.picker.click();
+            },
+            submit: function () {
+                if (this.$.picker.files.length != 1) return;
+                var data = new FormData();
+                data.append('data', this.$.picker.files[0]);
+                this.$.picker.value = '';
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', this.action, true);
+                xhr.addEventListener('readystatechange', function () {
+                    if (xhr.readyState === 4 && !this.aborted)
+                        if (this.succeeded) this.fire('response', JSON.parse(xhr.responseText));
+                        else this.fire('error', new Error('The request failed with status code: ' + xhr.status));
+                }.bind(this));
+                xhr.addEventListener('error', function (error) {
+                    this.fire('error', error);
+                }.bind(this));
+                xhr.send(data);
+            }
+        });
+    </script>
+</dom-module>

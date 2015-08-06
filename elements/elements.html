@@ -1,10 +1,13 @@
 <script src="/bower_components/js-sha512/build/sha512.min.js"></script>
+<link rel="import" href="ossso-page.html" />
 <link rel="import" href="/bower_components/iron-ajax/iron-ajax.html" />
 <link rel="import" href="/bower_components/paper-button/paper-button.html" />
 <link rel="import" href="/bower_components/paper-checkbox/paper-checkbox.html" />
+<link rel="import" href="/bower_components/paper-material/paper-material.html" />
 <link rel="import" href="/bower_components/paper-input/paper-input.html" />
-<link rel="import" href="/bower_components/paper-toast-manager/paper-toast-manager.html" />
-<link rel="import" href="ossso-page.html" />
+<link rel="import" href="ossso-change-password.html" />
+<link rel="import" href="ossso-form.html" />
+<link rel="import" href="ossso-upload-button.html" />
 <style is="custom-style">
     :root {
         @apply(--paper-font-common-base);
@@ -28,8 +31,23 @@
     }
 
     :root .block-center {
-        margin-left: auto;
-        margin-right: auto;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    :root paper-material[card] {
+        background-color: #fafafa;
+        border-radius: 3px;
+        margin: 1em 0;
+        padding: 0.7em 0.57em;
+    }
+
+    :root paper-material[card] > :first-child {
+        margin-top: 0;
+    }
+
+    :root paper-material[card] > :last-child {
+        margin-bottom: 0;
     }
 
     :root paper-button.colored:not([disabled]) {

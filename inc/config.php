@@ -13,15 +13,14 @@ class Config extends Db {
     public function get($key, $default) {
         $statement = $this->prepare('SELECT Value FROM Config WHERE Key = :key;');
         $statement->bindValue(':key', $key);
-        return ($row = $statement->execute()->fetchArray(SQLITE3_ASSOC)) && $row['value']
-            ? $row['value'] : $default;
+        return ($row = $statement->execute()->fetchArray(SQLITE3_ASSOC)) && $row['Value'] ? $row['Value'] : $default;
     }
 
     public function set($key, $value) {
         $statement = $this->prepare('INSERT OR REPLACE INTO Config (Key, Value) values (:key, :value);');
         $statement->bindValue(':key', $key);
         $statement->bindValue(':value', $value);
-        return $statement->execute();
+        return $this->executeWithError($statement);
     }
 
     public function getSiteName() { return $this->get('site_name', '选课系统'); }

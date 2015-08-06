@@ -1,0 +1,13 @@
+<link rel="import" href="/bower_components/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html" />
+<script>
+    Polymer({
+        is: 'ossso-form',
+        behaviors: [Polymer.IronA11yKeysBehavior],
+        keyBindings: {
+            'enter:keydown': 'submit'
+        },
+        submit: function () {
+            this.querySelector('[default]').click();
+        }
+    });
+</script>
