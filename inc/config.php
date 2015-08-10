@@ -1,5 +1,5 @@
 <?php
-require_once 'db.php';
+require_once dirname(__FILE__) . '/db.php';
 class Config extends Db {
     function __construct() {
         $this->openStrong($_SERVER['DOCUMENT_ROOT'] . '/data/config.db');
@@ -17,7 +17,7 @@ class Config extends Db {
     }
 
     public function set($key, $value) {
-        $statement = $this->prepare('INSERT OR REPLACE INTO Config (Key, Value) values (:key, :value);');
+        $statement = $this->prepare('INSERT OR REPLACE INTO Config (Key, Value) VALUES (:key, :value);');
         $statement->bindValue(':key', $key);
         $statement->bindValue(':value', $value);
         return $this->executeWithError($statement);

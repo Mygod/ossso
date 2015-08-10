@@ -1,5 +1,5 @@
 <?php
-require_once 'db.php';
+require_once dirname(__FILE__) . '/db.php';
 
 $data->execStrong('CREATE TABLE IF NOT EXISTS Students
 (
@@ -10,7 +10,18 @@ $data->execStrong('CREATE TABLE IF NOT EXISTS Students
     Introduction TEXT
 );');
 
-function studentLogin() {
+function student_add($id, $password, $name, $gender) {
+    global $data;
+    $statement = $data->prepare(
+        'INSERT OR REPLACE INTO Students (StudentID, Password, Name, Gender) VALUES (:id, :password, :name, :gender);');
+    $statement->bindValue(':id', $id);
+    $statement->bindValue(':password', hash('sha512', $password));
+    $statement->bindValue(':name', $name);
+    $statement->bindValue(':gender', $gender);
+    return $data->executeWithError($statement);
+}
+
+function student_login() {
     global $data, $uid, $password, $user;
     $statement = $data->prepare('SELECT * FROM Students WHERE StudentID = :uid AND Password = :password;');
     $statement->bindValue(':uid', $uid);
@@ -18,7 +29,7 @@ function studentLogin() {
     if ($user = $statement->execute()->fetchArray(SQLITE3_ASSOC)) $user['Mode'] = 'student';
 }
 
-function studentChangePassword($password) {
+function student_change_password($password) {
     global $data, $uid;
     $statement = $data->prepare('UPDATE Students SET Password = :password WHERE StudentID = :uid;');
     $statement->bindValue(':uid', $uid);

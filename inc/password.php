@@ -15,7 +15,7 @@ if (!file_exists($wordsFile)) {
     fclose($source);
     fclose($file);
 }
-$words = explode("\n", file_get_contents($wordsFile));
+$words = preg_split("/\n/", file_get_contents($wordsFile), -1, PREG_SPLIT_NO_EMPTY);
 
 function generate_password($length = 3) {
     global $words;

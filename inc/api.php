@@ -1,8 +1,7 @@
 <?php
-header('Content-Type: application/json');
 $result = ['success' => true];
 
-function addErrorMessage($msg) {
+function api_add_error_msg($msg) {
     global $result;
     if ($msg) {
         if (isset($result['errorMessage'])) $result['errorMessage'] .= '\n'; else $result['errorMessage'] = '';
@@ -12,7 +11,20 @@ function addErrorMessage($msg) {
     } else return false;
 }
 
-function printResult() {
+function api_print() {
     global $result;
+    header('Content-Type: application/json');
     echo json_encode($result);
+}
+
+function csv_init($filename) {
+    global $fout;
+    header('Content-Type: text/csv');
+    header("Content-Disposition: attachment;filename=$filename.csv");
+    $fout = fopen('php://output', 'w');
+}
+
+function fatal_alert($msg) {
+    die('<html><head><meta charset="utf-8" /></head><body><script>alert(' . json_encode($msg) .
+        ');history.go(-1);</script></body></html>');
 }

@@ -5,13 +5,13 @@
         <paper-input label="站点名称" value="{{config.siteName::blur}}" required auto-validate></paper-input>
         <iron-ajax auto method="POST" url="/api/config.php" body="[[_(config.*)]]"
                    content-type="application/x-www-form-urlencoded"
-                   on-response="handleResponse" on-error="handleError"></iron-ajax>
+                   on-response="configResponse" on-error="configError"></iron-ajax>
     </paper-material>
     <paper-item>教师管理</paper-item>
     <section>
         <div>
-            <ossso-upload-button action="/api/import-teachers.php" button-text="导入..."
-                                 on-response="teacherImportResponse" on-error="importError"></ossso-upload-button>
+            <ossso-upload-button action="/api/import-teachers.php" button-text="导入..."></ossso-upload-button>
+            <paper-button>刷新</paper-button>
         </div>
     </section>
     <paper-item>学生管理</paper-item>
@@ -37,15 +37,6 @@
         };
         binder.configError = function (e) {
             paperToastManager.toast('设置更新失败，未知错误：' + e.detail.error);
-        };
-
-        binder.importError = function (e) {
-            paperToastManager.toast('导入失败，未知错误：' + e.detail);
-        };
-        binder.teacherImportResponse = function (e) {
-            if (e.detail) paperToastManager.toast('导入失败：' + e.detail); else {
-                // TODO
-            }
         };
     });
 </script>
