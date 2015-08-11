@@ -21,6 +21,13 @@ function student_add($id, $password, $name, $gender) {
     return $data->executeWithError($statement);
 }
 
+function student_remove($id) {
+    global $data;
+    $statement = $data->prepare('DELETE FROM Students WHERE StudentID = :id;');
+    $statement->bindValue(':id', $id);
+    return $data->executeWithError($statement);
+}
+
 function student_login() {
     global $data, $uid, $password, $user;
     $statement = $data->prepare('SELECT * FROM Students WHERE StudentID = :uid AND Password = :password;');
@@ -35,4 +42,9 @@ function student_change_password($password) {
     $statement->bindValue(':uid', $uid);
     $statement->bindValue(':password', $password);
     return $data->executeWithError($statement);
+}
+
+function student_list() {
+    global $data;
+    return $data->fetchArrayAll($data->prepare('SELECT StudentID, Name, Gender FROM Students;')->execute());
 }

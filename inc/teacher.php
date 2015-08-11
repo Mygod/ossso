@@ -18,6 +18,13 @@ function teacher_add($id, $password, $name) {
     return $data->executeWithError($statement);
 }
 
+function teacher_remove($id) {
+    global $data;
+    $statement = $data->prepare('DELETE FROM Teachers WHERE TeacherID = :id;');
+    $statement->bindValue(':id', $id);
+    return $data->executeWithError($statement);
+}
+
 function teacher_login() {
     global $data, $uid, $password, $user;
     $statement = $data->prepare('SELECT * FROM Teachers WHERE TeacherID = :uid AND Password = :password;');
@@ -36,10 +43,5 @@ function teacher_change_password($password) {
 
 function teacher_list() {
     global $data;
-    $query = $data->prepare('SELECT TeacherID, Name FROM Teachers;')->execute();
-    if ($query) {
-        $result = [];
-        while ($row = $query->fetchArray(SQLITE3_ASSOC)) $result[] = $row;
-        return $result;
-    } else return $data->lastErrorMsg();
+    return $data->fetchArrayAll($data->prepare('SELECT TeacherID, Name FROM Teachers;')->execute());
 }

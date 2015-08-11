@@ -16,6 +16,13 @@ class Db extends SQLite3 {
     function executeWithError(SQLite3Stmt $statement) {
         return $statement->execute() ? null : $this->lastErrorMsg();
     }
+
+    function fetchArrayAll(SQLite3Result $query) {
+        if (!$query) return $this->lastErrorMsg();
+        $result = [];
+        while ($row = $query->fetchArray(SQLITE3_ASSOC)) $result[] = $row;
+        return $result;
+    }
 }
 
 class Data extends Db {

@@ -18,6 +18,14 @@
         @apply(--paper-font-common-code);
     }
 
+    :root .table-wrapper {
+        overflow-x: auto;
+    }
+    :root table, :root table .grow {
+        width: 100%;
+        white-space: nowrap;
+    }
+
     :root a {
         color: var(--default-primary-color);
         text-decoration: none;
@@ -50,9 +58,18 @@
         margin-bottom: 0;
     }
 
+    :root paper-button[raised]:not([disabled]) {
+        background-color: #fafafa;
+    }
     :root paper-button.colored:not([disabled]) {
         background-color: var(--default-primary-color);
         color: #fff;
+    }
+
+    :root paper-toast span[role=button] {
+        color: var(--paper-indigo-a200);
+        cursor: pointer;
+        margin: 12px;
     }
 
     /* TODO: https://github.com/PolymerElements/paper-tooltip/issues/3 */
