@@ -3,7 +3,7 @@ $result = ['success' => true];
 
 function api_add_error_msg($msg) {
     global $result;
-    if ($msg) {
+    if (is_string($msg)) {
         if (isset($result['errorMessage'])) $result['errorMessage'] .= '\n'; else $result['errorMessage'] = '';
         $result['errorMessage'] .= $msg;
         $result['success'] = false;

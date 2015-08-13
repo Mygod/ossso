@@ -6,6 +6,7 @@
 <link rel="import" href="/bower_components/paper-material/paper-material.html" />
 <link rel="import" href="/bower_components/paper-input/paper-input.html" />
 <link rel="import" href="ossso-change-password.html" />
+<link rel="import" href="ossso-course-list.html" />
 <link rel="import" href="ossso-form.html" />
 <link rel="import" href="ossso-upload-button.html" />
 <style is="custom-style">
@@ -43,6 +44,16 @@
         margin-right: auto !important;
     }
 
+    /* TODO: https://github.com/PolymerElements/paper-dialog-behavior/issues/22 */
+    paper-dialog {
+        position: fixed;
+    }
+
+    paper-dialog > * {
+        margin: 0;
+        padding: 0;
+    }
+
     :root paper-material[card] {
         background-color: #fafafa;
         border-radius: 3px;
@@ -63,6 +74,10 @@
     }
     :root paper-button.colored:not([disabled]) {
         background-color: var(--default-primary-color);
+        color: #fff;
+    }
+    :root paper-button.red:not([disabled]) {
+        background-color: var(--paper-red-500);
         color: #fff;
     }
 

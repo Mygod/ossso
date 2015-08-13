@@ -1,6 +1,6 @@
 <?php
 // Password Generator inspired by: http://xkcd.com/936/
-$wordsFile = '../data/words.txt';
+$wordsFile =  dirname(__FILE__) . '/../data/words.txt';
 if (!file_exists($wordsFile)) {
     $source = fopen('https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt', 'r');
     $file = fopen($wordsFile, 'w');

@@ -21,7 +21,7 @@
                 <tbody>
                 <template is="dom-repeat" items="[[teachersResponse.teachers]]">
                     <tr hidden$="[[item.deleting]]">
-                        <td>[[item.TeacherID]]</td><td>[[item.Name]]</td>
+                        <td>[[item.TeacherID]]</td><td>[[item.TeacherName]]</td>
                         <td>
                             <paper-icon-button icon="delete" on-click="teacherDelete"></paper-icon-button>
                             <paper-tooltip>删除</paper-tooltip>
@@ -46,7 +46,7 @@
                 <tbody>
                 <template is="dom-repeat" items="[[studentsResponse.students]]">
                     <tr hidden$="[[item.deleting]]">
-                        <td>[[item.StudentID]]</td><td>[[item.Name]]</td><td>[[item.Gender]]</td>
+                        <td>[[item.StudentID]]</td><td>[[item.StudentName]]</td><td>[[item.StudentGender]]</td>
                         <td>
                             <paper-icon-button icon="delete" on-click="studentDelete"></paper-icon-button>
                             <paper-tooltip>删除</paper-tooltip>
@@ -73,9 +73,7 @@
             request.send({
                 url: '/api/' + action + '.php',
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: body,
                 async: true,
                 handleAs: 'json'

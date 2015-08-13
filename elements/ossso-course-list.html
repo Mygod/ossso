@@ -1,0 +1,166 @@
+<link rel="import" href="/bower_components/iron-icons/image-icons.html" />
+<link rel="import" href="/bower_components/neon-animation/animations/scale-down-animation.html" />
+<link rel="import" href="/bower_components/neon-animation/animations/scale-up-animation.html" />
+<link rel="import" href="/bower_components/paper-dialog/paper-dialog.html" />
+<link rel="import" href="/bower_components/paper-input/paper-textarea.html" />
+<link rel="import" href="/bower_components/paper-toggle-button/paper-toggle-button.html" />
+<link rel="import" href="ossso-time-picker.html" />
+<dom-module id="ossso-course-list">
+    <style>
+        #courses tbody tr {
+            cursor: pointer;
+        }
+    </style>
+    <template>
+        <iron-ajax id="manager" method="POST" url="/api/course/list.php" last-response="{{response}}"
+                   auto on-response="respond" on-error="error"></iron-ajax>
+        <iron-ajax id="detailFetcher" method="POST" url="/api/course/info.php" last-response="{{details}}"
+                   content-type="application/x-www-form-urlencoded" auto="[[editable(details)]]"
+                   body="[[details.course.*]]" on-response="showDetails" on-error="error"></iron-ajax>
+        <div>
+            <paper-button raised on-click="create" hidden$="[[student]]">新建...</paper-button>
+            <paper-button raised on-click="refresh">刷新</paper-button>
+        </div>
+        <paper-material card class="table-wrapper">
+            <table id="courses">
+                <thead><tr>
+                    <th class="grow">课程名称</th><th>开课老师</th><th>时间</th><th>人数</th>
+                    <th hidden$="[[!student]]">报名</th>
+                </tr></thead>
+                <tbody>
+                <template is="dom-repeat" items="[[response.courses]]">
+                    <tr hidden$="[[item.deleting]]" on-click="viewDetails">
+                        <td>[[item.CourseName]]</td><td>[[item.TeacherName]]</td><td>[[formatPeriod(item)]]</td>
+                        <td><span>[[item.CourseEntryCount]]</span>/<span>[[item.CourseStudentCount]]</span></td>
+                        <td hidden$="[[!student]]">
+                            <paper-toggle-button checked="{{item.Entered}}"></paper-toggle-button>
+                        </td>
+                    </tr>
+                </template>
+                </tbody>
+            </table>
+        </paper-material>
+        <paper-dialog id="courseDialog" with-backdrop
+                      entry-animation="scale-up-animation" exit-animation="scale-down-animation"><section>
+            <paper-input label="课程名称" value="{{details.course.CourseName::blur}}" readonly="[[editable(details)]]">
+            </paper-input>
+            <paper-input label="开课老师" value="[[details.course.TeacherName]]" readonly></paper-input>
+            <paper-textarea label="课程目标" value="{{details.course.CourseObjectives::blur}}"
+                            readonly="[[editable(details)]]"></paper-textarea>
+            <paper-textarea label="课程内容" value="{{details.course.CourseContent::blur}}"
+                            readonly="[[editable(details)]]"></paper-textarea>
+            <paper-textarea label="评价要求" value="{{details.course.CourseEvaluation::blur}}"
+                            readonly="[[editable(details)]]"></paper-textarea>
+            <div>
+                <ossso-time-picker value="{{details.course.CourseStartTime}}"></ossso-time-picker>
+                -
+                <ossso-time-picker value="{{details.course.CourseEndTime}}"></ossso-time-picker>
+            </div>
+            <paper-input label="人数" value="{{details.course.CourseStudentCount::blur}}"
+                         readonly="[[editable(details)]]"></paper-input>
+            <div class="text-center">
+                <paper-button raised class="red" on-click="dialogDelete">删除</paper-button>
+            </div>
+        </section></paper-dialog>
+        <paper-toast id="deleted" text="已删除。" on-visible-changed="doDelete" on-tap="deletedDismiss">
+            <span role="button" tabindex="0" on-click="undoDelete">撤销</span>
+        </paper-toast>
+    </template>
+    <script>
+        Polymer({
+            is: 'ossso-course-list',
+            properties: {
+                student: {
+                    type: Boolean,
+                    value: false
+                },
+                teacher: {
+                    type: Object,
+                    value: null
+                }
+            },
+            showDetails: function (e) {
+                if (e.detail.response.success) this.$.courseDialog.open(); else this.respond(e);
+            },
+            respond: function (e) {
+                if (!e.detail.response.success) paperToastManager.toast('操作失败：' + e.detail.response.errorMessage);
+            },
+            error: function (e) {
+                paperToastManager.toast('操作失败，未知错误：' + e.detail.error);
+            },
+            create: function () {
+                this.details = {
+                    success: true,
+                    course: {
+                        CourseName: '',
+                        TeacherID: this.teacher.TeacherID,
+                        TeacherName: this.teacher.TeacherName,
+                        CourseObjectives: '',
+                        CourseContent: '',
+                        CourseEvaluation: '',
+                        CourseStartTime: 0,
+                        CourseEndTime: 0,
+                        CourseEntryCount: 0,
+                        CourseStudentCount: 10
+                    }
+                };
+                this.$.courseDialog.open();
+            },
+            refresh: function () {
+                this.$.manager.generateRequest();
+            },
+            viewDetails: function (e) {
+                this.$.detailFetcher.body = { CourseID: e.model.item.CourseID };
+                if (!this.$.detailFetcher.auto) this.$.detailFetcher.generateRequest();
+            },
+            formatDay: function (date) {
+                return '周' + '日一二三四五六'[(date.getDay() + 3) % 7] + ' ';
+            },
+            formatTime: function (date) {
+                var mins = date.getUTCMinutes();
+                return date.getUTCHours() + ':' + (mins < 10 ? '0' : '') + mins;
+            },
+            formatPeriod: function (item) {
+                var a = new Date(item.CourseStartTime * 60000), b = new Date(item.CourseEndTime * 60000),
+                    i = this.formatDay(a), j = this.formatDay(b);
+                return i + this.formatTime(a) + ' - ' + (i == j ? '' : j) + this.formatTime(b);
+            },
+            editable: function (details) {
+                return details && !this.student && details.course.TeacherID == this.teacher.TeacherID;
+            },
+            setDeleting: function (path, item, value) {
+                this.set(path + '.' + this.get(path).indexOf(item) + '.deleting', value);
+            },
+            dialogDelete: function () {
+                this.setDeleting('response.courses', this.deleteItem = this.response.courses.find(function (e) {
+                    return e.CourseID == this.details.course.CourseID;
+                }, this), true);
+                this.$.courseDialog.close();
+                this.$.deleted.show();
+            },
+            doDelete: function (e) {
+                if (e.detail.value || !this.deleteItem) return;
+                var request = document.createElement('iron-request');
+                request.completes.then(this.respond.bind(this)).catch(this.error.bind(this));
+                request.send({
+                    url: '/api/course/delete.php',
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: { 'CourseID': this.deleteItem.CourseID },
+                    async: true,
+                    handleAs: 'json'
+                });
+                var index = this.response.courses.indexOf(this.deleteItem);
+                if (index >= 0) this.splice('response.courses', index, 1);
+                this.deleteItem = null;
+            },
+            deletedDismiss: function () {
+                this.$.deleted.hide();
+            },
+            undoDelete: function () {
+                this.setDeleting('response.courses', this.deleteItem, true);
+                this.deleteItem = null;
+            }
+        });
+    </script>
+</dom-module>

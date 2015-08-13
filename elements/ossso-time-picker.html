@@ -1,0 +1,67 @@
+<link rel="import" href="/bower_components/neon-animation/animations/scale-down-animation.html" />
+<link rel="import" href="/bower_components/neon-animation/animations/scale-up-animation.html" />
+<link rel="import" href="/bower_components/paper-button/paper-button.html" />
+<link rel="import" href="/bower_components/paper-dialog/paper-dialog.html" />
+<link rel="import" href="/bower_components/paper-menu-button/paper-menu-button.html" />
+<link rel="import" href="/bower_components/paper-time-picker/paper-time-picker.html" />
+<dom-module id="ossso-time-picker">
+    <template>
+        <paper-menu-button>
+            <paper-button class="dropdown-trigger">[[formatDay(day)]]</paper-button>
+            <paper-menu class="dropdown-content" selected="{{day}}">
+                <paper-item>周日</paper-item>
+                <paper-item>周一</paper-item>
+                <paper-item>周二</paper-item>
+                <paper-item>周三</paper-item>
+                <paper-item>周四</paper-item>
+                <paper-item>周五</paper-item>
+                <paper-item>周六</paper-item>
+            </paper-menu>
+        </paper-menu-button>
+        <paper-button on-click="selectTime"><span>[[hour]]</span>:<span>[[minute]]</span></paper-button>
+        <paper-dialog id="dialog" with-backdrop
+                      entry-animation="scale-up-animation" exit-animation="scale-down-animation">
+            <paper-time-picker hour="{{hour}}" minute="{{minute}}"></paper-time-picker>
+        </paper-dialog>
+    </template>
+    <script>
+        Polymer({
+            is: 'ossso-time-picker',
+            properties: {
+                value: {
+                    type: Number,
+                    value: 0,
+                    observer: '_valueChanged'
+                },
+                day: {
+                    type: Number,
+                    value: 0
+                },
+                hour: {
+                    type: Number,
+                    value: 0
+                },
+                minute: {
+                    type: Number,
+                    value: 0
+                }
+            },
+            observer: ['_updateDate(day, hour, minute)'],
+            formatDay: function (day) {
+                return '周' + '日一二三四五六'[day];
+            },
+            selectTime: function () {
+                this.$.dialog.open();
+            },
+            _valueChanged: function (val) {
+                var d = new Date(val * 60000);
+                this.day = (d.getDay() + 3) % 7;
+                this.hour = d.getUTCHours();
+                this.minute = d.getUTCMinutes();
+            },
+            _updateDate: function (d, h, m) {
+                this.value = (d * 24 + h) * 60 + m;
+            }
+        });
+    </script>
+</dom-module>

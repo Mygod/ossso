@@ -4,10 +4,10 @@ require_once dirname(__FILE__) . '/db.php';
 $data->execStrong('CREATE TABLE IF NOT EXISTS Reviews
 (
     ReviewID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Type INTEGER NOT NULL,
+    ReviewType INTEGER NOT NULL,
     StudentID INTEGER NOT NULL,
     TeacherID TEXT NOT NULL,
-    Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Score INTEGER NOT NULL,
-    Comment TEXT
+    ReviewTimestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ReviewScore INTEGER NOT NULL,
+    ReviewComment TEXT
 );');
