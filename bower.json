@@ -40,7 +40,7 @@
     "iron-validator-behavior": "PolymerElements/iron-validator-behavior#~1.0.1",
     "paper-dialog": "PolymerElements/paper-dialog#~1.0.1",
     "paper-toggle-button": "PolymerElements/paper-toggle-button#~1.0.6",
-    "paper-time-picker": "bendavis78/paper-time-picker#~1.0.3",
-    "paper-menu-button": "PolymerElements/paper-menu-button#~1.0.2"
+    "paper-menu-button": "PolymerElements/paper-menu-button#~1.0.2",
+    "paper-time-picker": "bendavis78/paper-time-picker#~1.0.3"
   }
 }

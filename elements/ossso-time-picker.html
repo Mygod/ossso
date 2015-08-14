@@ -18,7 +18,7 @@
                 <paper-item>周六</paper-item>
             </paper-menu>
         </paper-menu-button>
-        <paper-button on-click="selectTime"><span>[[hour]]</span>:<span>[[minute]]</span></paper-button>
+        <paper-button on-click="selectTime"><span>[[hour]]</span>:<span>[[_formatMinute(minute)]]</span></paper-button>
         <paper-dialog id="dialog" with-backdrop
                       entry-animation="scale-up-animation" exit-animation="scale-down-animation">
             <paper-time-picker hour="{{hour}}" minute="{{minute}}"></paper-time-picker>
@@ -28,39 +28,42 @@
         Polymer({
             is: 'ossso-time-picker',
             properties: {
-                value: {
-                    type: Number,
-                    value: 0,
-                    observer: '_valueChanged'
-                },
                 day: {
                     type: Number,
-                    value: 0
+                    value: 0,
+                    observer: '_updateValue'
                 },
                 hour: {
                     type: Number,
-                    value: 0
+                    value: 0,
+                    observer: '_updateValue'
                 },
                 minute: {
                     type: Number,
-                    value: 0
+                    value: 0,
+                    observer: '_updateValue'
                 }
             },
-            observer: ['_updateDate(day, hour, minute)'],
             formatDay: function (day) {
                 return '周' + '日一二三四五六'[day];
             },
             selectTime: function () {
                 this.$.dialog.open();
             },
-            _valueChanged: function (val) {
+            get value() {
+                return (this.day * 24 + this.hour) * 60 + this.minute;
+            },
+            set value(val) {
                 var d = new Date(val * 60000);
                 this.day = (d.getDay() + 3) % 7;
                 this.hour = d.getUTCHours();
                 this.minute = d.getUTCMinutes();
             },
-            _updateDate: function (d, h, m) {
-                this.value = (d * 24 + h) * 60 + m;
+            _updateValue: function () {
+                this.fire('value-changed');
+            },
+            _formatMinute: function (m) {
+                return m < 10 ? '0' + m : m;
             }
         });
     </script>
