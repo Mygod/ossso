@@ -7,9 +7,9 @@ $data->execStrong('CREATE TABLE IF NOT EXISTS Courses
     CourseID INTEGER PRIMARY KEY AUTOINCREMENT,
     CourseName TEXT NOT NULL,
     TeacherID TEXT NOT NULL,
-    CourseObjectives TEXT,
-    CourseContent TEXT,
-    CourseEvaluation TEXT,
+    CourseObjectives TEXT NOT NULL,
+    CourseContent TEXT NOT NULL,
+    CourseEvaluation TEXT NOT NULL,
     CourseStartTime INTEGER NOT NULL,
     CourseEndTime INTEGER NOT NULL,
     CourseStudentCount INTEGER NOT NULL
@@ -24,7 +24,7 @@ function course_list() {
         ' FROM Courses NATURAL LEFT JOIN Teachers NATURAL LEFT JOIN Entries GROUP BY CourseID;')->execute());
 }
 
-function course_info($query, $user) {
+function course_info($query) {
     global $data, $user;
     $id = isset($query['CourseID']) ? $query['CourseID'] : '';
     if (isset($query['CourseName'])) {
@@ -57,4 +57,13 @@ function course_info($query, $user) {
         ' FROM Courses NATURAL LEFT JOIN Teachers NATURAL LEFT JOIN Entries WHERE CourseID = :id GROUP BY CourseID;');
     $statement->bindValue(':id', $id);
     return $data->fetchArray($statement->execute());
+}
+
+function course_delete($id) {
+    global $data, $user;
+    $statement = $data->prepare('DELETE FROM Courses WHERE CourseID = :id AND TeacherID = :uid;');
+    $statement->bindValue(':id', $id);
+    $statement->bindValue(':uid', $user['TeacherID']);
+    if (is_string($msg = $data->executeWithError($statement))) return $msg;
+    return $data->changes() ? null : '未找到符合条件的课程！';
 }

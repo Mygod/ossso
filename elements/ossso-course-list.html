@@ -14,9 +14,9 @@
     <template>
         <iron-ajax id="manager" method="POST" url="/api/course/list.php" last-response="{{response}}"
                    auto on-response="respond" on-error="error"></iron-ajax>
-        <iron-ajax id="detailFetcher" method="POST" url="/api/course/info.php" last-response="{{details}}"
-                   content-type="application/x-www-form-urlencoded" auto="[[editable(details)]]"
-                   body="[[details.course.*]]" on-response="showDetails" on-error="error"></iron-ajax>
+        <iron-ajax id="detailFetcher" method="POST" url="/api/course/info.php"
+                   content-type="application/x-www-form-urlencoded"
+                   on-response="showDetails" on-error="error"></iron-ajax>
         <div>
             <paper-button raised on-click="create" hidden$="[[student]]">新建...</paper-button>
             <paper-button raised on-click="refresh">刷新</paper-button>
@@ -42,23 +42,24 @@
         </paper-material>
         <paper-dialog id="courseDialog" with-backdrop
                       entry-animation="scale-up-animation" exit-animation="scale-down-animation"><section>
-            <paper-input label="课程名称" value="{{details.course.CourseName::blur}}" readonly="[[editable(details)]]">
+            <paper-input label="课程名称" value="{{course.CourseName::blur}}" readonly="[[readonly(course)]]">
             </paper-input>
-            <paper-input label="开课老师" value="[[details.course.TeacherName]]" readonly></paper-input>
-            <paper-textarea label="课程目标" value="{{details.course.CourseObjectives::blur}}"
-                            readonly="[[editable(details)]]"></paper-textarea>
-            <paper-textarea label="课程内容" value="{{details.course.CourseContent::blur}}"
-                            readonly="[[editable(details)]]"></paper-textarea>
-            <paper-textarea label="评价要求" value="{{details.course.CourseEvaluation::blur}}"
-                            readonly="[[editable(details)]]"></paper-textarea>
+            <paper-input label="开课老师" value="[[course.TeacherName]]" readonly></paper-input>
+            <paper-textarea label="课程目标" value="{{course.CourseObjectives::blur}}" readonly="[[readonly(course)]]">
+            </paper-textarea>
+            <paper-textarea label="课程内容" value="{{course.CourseContent::blur}}" readonly="[[readonly(course)]]">
+            </paper-textarea>
+            <paper-textarea label="评价要求" value="{{course.CourseEvaluation::blur}}" readonly="[[readonly(course)]]">
+            </paper-textarea>
             <div>
-                <ossso-time-picker value="{{details.course.CourseStartTime}}"></ossso-time-picker>
+                <ossso-time-picker value="{{course.CourseStartTime}}" readonly="[[readonly(course)]]">
+                </ossso-time-picker>
                 -
-                <ossso-time-picker value="{{details.course.CourseEndTime}}"></ossso-time-picker>
+                <ossso-time-picker value="{{course.CourseEndTime}}" readonly="[[readonly(course)]]"></ossso-time-picker>
             </div>
-            <paper-input label="人数" value="{{details.course.CourseStudentCount::blur}}"
-                         readonly="[[editable(details)]]"></paper-input>
-            <div class="text-center">
+            <paper-input label="人数" value="{{course.CourseStudentCount::blur}}" readonly="[[readonly(course)]]">
+            </paper-input>
+            <div class="text-center" hidden$="[[readonly(course)]]">
                 <paper-button raised class="red" on-click="dialogDelete">删除</paper-button>
             </div>
         </section></paper-dialog>
@@ -79,8 +80,18 @@
                     value: null
                 }
             },
+            observers: ['contentUpdated(course.*)'],
+            contentUpdated: function (record) {
+                if (record.path == 'course' || this.readonly(this.course)) return;  // ignore changes to base
+                this.$.detailFetcher.body = record.base;
+                this.$.detailFetcher.generateRequest();
+            },
             showDetails: function (e) {
-                if (e.detail.response.success) this.$.courseDialog.open(); else this.respond(e);
+                if (e.detail.response.success) {
+                    if (this.course) this.course.CourseID = e.detail.response.course.CourseID;
+                    else this.course = e.detail.response.course;
+                    this.$.courseDialog.open();
+                } else this.respond(e);
             },
             respond: function (e) {
                 if (!e.detail.response.success) paperToastManager.toast('操作失败：' + e.detail.response.errorMessage);
@@ -89,20 +100,17 @@
                 paperToastManager.toast('操作失败，未知错误：' + e.detail.error);
             },
             create: function () {
-                this.details = {
-                    success: true,
-                    course: {
-                        CourseName: '',
-                        TeacherID: this.teacher.TeacherID,
-                        TeacherName: this.teacher.TeacherName,
-                        CourseObjectives: '',
-                        CourseContent: '',
-                        CourseEvaluation: '',
-                        CourseStartTime: 0,
-                        CourseEndTime: 0,
-                        CourseEntryCount: 0,
-                        CourseStudentCount: 10
-                    }
+                this.course = {
+                    CourseName: '',
+                    TeacherID: this.teacher.TeacherID,
+                    TeacherName: this.teacher.TeacherName,
+                    CourseObjectives: '',
+                    CourseContent: '',
+                    CourseEvaluation: '',
+                    CourseStartTime: 0,
+                    CourseEndTime: 0,
+                    CourseEntryCount: 0,
+                    CourseStudentCount: 10
                 };
                 this.$.courseDialog.open();
             },
@@ -110,11 +118,12 @@
                 this.$.manager.generateRequest();
             },
             viewDetails: function (e) {
+                this.course = null;
                 this.$.detailFetcher.body = { CourseID: e.model.item.CourseID };
-                if (!this.$.detailFetcher.auto) this.$.detailFetcher.generateRequest();
+                this.$.detailFetcher.generateRequest();
             },
             formatDay: function (date) {
-                return '周' + '日一二三四五六'[(date.getDay() + 3) % 7] + ' ';
+                return '周' + '日一二三四五六'[(date.getUTCDay() + 3) % 7] + ' ';
             },
             formatTime: function (date) {
                 var mins = date.getUTCMinutes();
@@ -125,15 +134,15 @@
                     i = this.formatDay(a), j = this.formatDay(b);
                 return i + this.formatTime(a) + ' - ' + (i == j ? '' : j) + this.formatTime(b);
             },
-            editable: function (details) {
-                return details && !this.student && details.course.TeacherID == this.teacher.TeacherID;
+            readonly: function (course) {
+                return !course || this.student || course.TeacherID != this.teacher.TeacherID;
             },
             setDeleting: function (path, item, value) {
                 this.set(path + '.' + this.get(path).indexOf(item) + '.deleting', value);
             },
             dialogDelete: function () {
                 this.setDeleting('response.courses', this.deleteItem = this.response.courses.find(function (e) {
-                    return e.CourseID == this.details.course.CourseID;
+                    return e.CourseID == this.course.CourseID;
                 }, this), true);
                 this.$.courseDialog.close();
                 this.$.deleted.show();
@@ -158,7 +167,7 @@
                 this.$.deleted.hide();
             },
             undoDelete: function () {
-                this.setDeleting('response.courses', this.deleteItem, true);
+                this.setDeleting('response.courses', this.deleteItem, false);
                 this.deleteItem = null;
             }
         });

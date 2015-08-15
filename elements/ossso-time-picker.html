@@ -6,19 +6,27 @@
 <link rel="import" href="/bower_components/paper-time-picker/paper-time-picker.html" />
 <dom-module id="ossso-time-picker">
     <template>
-        <paper-menu-button>
-            <paper-button class="dropdown-trigger">[[formatDay(day)]]</paper-button>
-            <paper-menu class="dropdown-content" selected="{{day}}">
-                <paper-item>周日</paper-item>
-                <paper-item>周一</paper-item>
-                <paper-item>周二</paper-item>
-                <paper-item>周三</paper-item>
-                <paper-item>周四</paper-item>
-                <paper-item>周五</paper-item>
-                <paper-item>周六</paper-item>
-            </paper-menu>
-        </paper-menu-button>
-        <paper-button on-click="selectTime"><span>[[hour]]</span>:<span>[[_formatMinute(minute)]]</span></paper-button>
+        <template is="dom-if" if="[[readonly]]">
+            <span>[[formatDay(day)]]</span>
+            <span>[[hour]]</span>:<span>[[_formatMinute(minute)]]</span>
+        </template>
+        <template is="dom-if" if="[[!readonly]]">
+            <paper-menu-button>
+                <paper-button class="dropdown-trigger">[[formatDay(day)]]</paper-button>
+                <paper-menu class="dropdown-content" selected="{{day}}">
+                    <paper-item>周日</paper-item>
+                    <paper-item>周一</paper-item>
+                    <paper-item>周二</paper-item>
+                    <paper-item>周三</paper-item>
+                    <paper-item>周四</paper-item>
+                    <paper-item>周五</paper-item>
+                    <paper-item>周六</paper-item>
+                </paper-menu>
+            </paper-menu-button>
+            <paper-button on-click="selectTime">
+                <span>[[hour]]</span>:<span>[[_formatMinute(minute)]]</span>
+            </paper-button>
+        </template>
         <paper-dialog id="dialog" with-backdrop
                       entry-animation="scale-up-animation" exit-animation="scale-down-animation">
             <paper-time-picker hour="{{hour}}" minute="{{minute}}"></paper-time-picker>
@@ -28,6 +36,12 @@
         Polymer({
             is: 'ossso-time-picker',
             properties: {
+                value: {
+                    type: Number,
+                    value: 0,
+                    observer: '_valueChanged',
+                    notify: true
+                },
                 day: {
                     type: Number,
                     value: 0,
@@ -42,6 +56,10 @@
                     type: Number,
                     value: 0,
                     observer: '_updateValue'
+                },
+                readonly: {
+                    type: Boolean,
+                    value: false
                 }
             },
             formatDay: function (day) {
@@ -50,17 +68,21 @@
             selectTime: function () {
                 this.$.dialog.open();
             },
-            get value() {
-                return (this.day * 24 + this.hour) * 60 + this.minute;
+            _update: function (path, val) {
+                if (this.__data__[path] == val) return false;
+                this.__data__[path] = val;
+                return true;
             },
-            set value(val) {
+            _valueChanged: function (val) {
+                if (val == undefined) return;
                 var d = new Date(val * 60000);
-                this.day = (d.getDay() + 3) % 7;
-                this.hour = d.getUTCHours();
+                var c1 = this._update('day', (d.getUTCDay() + 3) % 7), c2 = this._update('hour', d.getUTCHours());
                 this.minute = d.getUTCMinutes();
+                if (c2) this._pathEffector('hour', this.hour);
+                if (c1) this._pathEffector('day', this.day);
             },
             _updateValue: function () {
-                this.fire('value-changed');
+                this.value = (this.day * 24 + this.hour) * 60 + this.minute;
             },
             _formatMinute: function (m) {
                 return m < 10 ? '0' + m : m;

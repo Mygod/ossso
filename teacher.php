@@ -1,10 +1,9 @@
 <template is="dom-bind" id="binder">
     <ossso-page page-title="<?= $config->getSiteName() ?>">
         <paper-item>课程设置</paper-item>
-        <ossso-course-list teacher="<?= $user['TeacherID'] ?>"></ossso-course-list>
+        <ossso-course-list teacher="[[teacher]]"></ossso-course-list>
         <paper-item>学生评价</paper-item>
-        <section>
-        </section>
+        <section></section>
         <paper-item>帐户管理</paper-item>
         <section>
             <paper-material card>
@@ -23,9 +22,7 @@
         binder._ = function (info) {
             return info.base;
         };
-        binder.teacher = {
-            Name: <?= json_encode($user['TeacherName']) ?>
-        };
+        binder.teacher = <?= json_encode($user) ?>;
         binder.response = function (e) {
             if (!e.detail.response.success) paperToastManager.toast('更新失败：' + e.detail.response.errorMessage);
         };
