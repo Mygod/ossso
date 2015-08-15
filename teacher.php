@@ -7,8 +7,8 @@
         <paper-item>帐户管理</paper-item>
         <section>
             <paper-material card>
-                <paper-input label="姓名" value="{{teacher.Name::blur}}" required auto-validate></paper-input>
-                <iron-ajax auto method="POST" url="/api/teacher/info.php" body="[[_(teacher.*)]]"
+                <paper-input label="姓名" value="{{teacher.TeacherName::blur}}" required auto-validate></paper-input>
+                <iron-ajax auto method="POST" url="/api/teacher/info.php" body="[[_(teacher.TeacherName)]]"
                            content-type="application/x-www-form-urlencoded"
                            on-response="response" on-error="error"></iron-ajax>
             </paper-material>
@@ -19,10 +19,13 @@
 <script>
     var binder = document.querySelector('#binder');
     binder.addEventListener('dom-change', function () {
-        binder._ = function (info) {
-            return info.base;
+        binder._ = function (TeacherName) {
+            return { TeacherName: TeacherName };
         };
-        binder.teacher = <?= json_encode($user) ?>;
+        binder.teacher = {
+            TeacherID: <?= json_encode($user['TeacherID']) ?>,
+            TeacherName: <?= json_encode($user['TeacherName']) ?>
+        };
         binder.response = function (e) {
             if (!e.detail.response.success) paperToastManager.toast('更新失败：' + e.detail.response.errorMessage);
         };

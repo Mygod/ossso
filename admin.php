@@ -3,7 +3,7 @@
     <paper-item>系统设置</paper-item>
     <paper-material card>
         <paper-input label="站点名称" value="{{config.siteName::blur}}" required auto-validate></paper-input>
-        <iron-ajax auto method="POST" url="/api/config.php" body="[[_(config.*)]]"
+        <iron-ajax auto method="POST" url="/api/config.php" body="[[_(config.siteName)]]"
                    content-type="application/x-www-form-urlencoded"
                    on-response="response" on-error="error"></iron-ajax>
     </paper-material>
@@ -88,8 +88,8 @@
             if (index >= 0) binder.splice(path, index, 1);
         }
 
-        binder._ = function (info) {
-            return info.base;
+        binder._ = function (siteName) {
+            return { siteName: siteName };
         };
         binder.config = {
             siteName: '<?= $config->getSiteName() ?>'
