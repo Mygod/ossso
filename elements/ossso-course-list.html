@@ -33,7 +33,7 @@
                         <td>[[item.CourseName]]</td><td>[[item.TeacherName]]</td><td>[[formatPeriod(item)]]</td>
                         <td><span>[[item.CourseEntryCount]]</span>/<span>[[item.CourseStudentCount]]</span></td>
                         <td hidden$="[[!student]]">
-                            <paper-toggle-button checked="{{item.Entered}}" disabled="[[canToggle(item.*)]]"
+                            <paper-toggle-button checked="[[item.checked]]" disabled="[[canToggle(item.*)]]"
                                                  on-iron-change="toggleCourse"></paper-toggle-button>
                         </td>
                     </tr>
@@ -81,11 +81,15 @@
                     value: null
                 }
             },
-            observers: ['contentUpdated(course.*)'],
+            observers: ['contentUpdated(course.*)', 'responseUpdated(response.*)'],
             contentUpdated: function (record) {
                 if (record.path == 'course' || this.readonly(this.course)) return;  // ignore changes to base
                 this.$.detailFetcher.body = record.base;
                 this.$.detailFetcher.generateRequest();
+            },
+            responseUpdated: function (record) {
+                var r = /^response.courses.(\d+).Entered$/i.exec(record.path);
+                if (r) this._setCourseIndex('checked', r[1], record.value > 0);
             },
             showDetails: function (e) {
                 if (e.detail.response.success) {
@@ -139,7 +143,10 @@
                 return !course || this.student || course.TeacherID != this.teacher.TeacherID;
             },
             _setCourse: function (path, item, value) {
-                this.set('response.courses' + '.' + this.get('response.courses').indexOf(item) + '.' + path, value);
+                this._setCourseIndex(path, this.get('response.courses').indexOf(item), value);
+            },
+            _setCourseIndex: function (path, index, value) {
+                this.set('response.courses' + '.' + index + '.' + path, value);
             },
             _findCourse: function (id) {
                 return this.response.courses.find(function (e) {
@@ -174,30 +181,34 @@
                 this._setCourse('deleting', this.deleteItem, false);
                 this.deleteItem = null;
             },
+            entered: function (e) {
+                return e > 0;
+            },
             canToggle: function (r) {
                 var item = r.base;
-                return !item.busy && (item.Entered || item.CourseEntryCount < item.CourseStudentCount);
+                return !item.busy && (item.Entered > 0 || item.CourseEntryCount < item.CourseStudentCount);
             },
             enterResponse: function (e) {
                 this.respond(e);
                 var course = this._findCourse(e.detail.request.body.CourseID);
                 if (!course) return;
                 this._setCourse('busy', course, false);
-                this._setCourse('CourseStudentCount', e.detail.response.CourseStudentCount);
-                this._setCourse('Entered', course, e.detail.response.Entered);
+                this._setCourse('CourseStudentCount', e.detail.response.course.CourseStudentCount);
+                this._setCourse('Entered', course, e.detail.response.course.Entered);
             },
             enterError: function (e) {
                 this.error(e);
                 var course = this._findCourse(e.detail.request.body.CourseID);
                 if (!course) return;
                 this._setCourse('busy', course, false);
-                this._setCourse('Entered', course, !course.Entered);
+                this._setCourse('Entered', course, e.detail.response.course.Entered);
             },
             toggleCourse: function (e) {
                 var course = e.model.item;
                 if (!course) return;
                 this._setCourse('busy', course, true);
                 this.$.enter.body = { CourseID: course.CourseID };
+                this.$.enter.generateRequest();
             }
         });
     </script>

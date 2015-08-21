@@ -25,10 +25,12 @@ CREATE TABLE IF NOT EXISTS Entries
 function course_list() {
     global $data, $user;
     return $data->fetchArrayAll($data->prepare(
-        'SELECT CourseID, CourseName, TeacherName, CourseStartTime, CourseEndTime,
-                COUNT(CourseID) AS CourseEntryCount, CourseStudentCount' . ($user['Mode'] == 'student'
+        'SELECT CourseID, CourseName, TeacherName, CourseStartTime, CourseEndTime, CourseEntryCount, ' .
+        'CourseStudentCount' . ($user['Mode'] == 'student' ? ", Entered" : '') .
+        ' FROM Courses NATURAL LEFT JOIN Teachers NATURAL LEFT JOIN (SELECT COUNT(StudentID) AS CourseEntryCount' .
+        ($user['Mode'] == 'student'
             ? ", SUM(CASE WHEN StudentID=${user['StudentID']} THEN 1 ELSE 0 END) AS Entered" : '') .
-        ' FROM Courses NATURAL LEFT JOIN Teachers NATURAL LEFT JOIN Entries GROUP BY CourseID;')->execute());
+        ' FROM Entries GROUP BY CourseID);')->execute());
 }
 
 function course_info($query) {
@@ -58,10 +60,11 @@ function course_info($query) {
         return $query;
     }
     $statement = $data->prepare('SELECT CourseID, CourseName, TeacherID, TeacherName, CourseObjectives, CourseContent,
-        CourseEvaluation, CourseStartTime, CourseEndTime, COUNT(CourseID) AS CourseEntryCount, CourseStudentCount' .
-        ($user['Mode'] == 'student'
-            ? ", SUM(CASE WHEN StudentID=${user['StudentID']} THEN 1 ELSE 0 END) AS Entered" : '') .
-        ' FROM Courses NATURAL LEFT JOIN Teachers NATURAL LEFT JOIN Entries WHERE CourseID = :id GROUP BY CourseID;');
+        CourseEvaluation, CourseStartTime, CourseEndTime, CourseEntryCount, CourseStudentCount' . ($user['Mode'] ==
+            'student' ? ', Entered' : '') .
+        ' FROM Courses NATURAL LEFT JOIN Teachers NATURAL LEFT JOIN (SELECT COUNT(StudentID) AS CourseEntryCount' .
+        ($user['Mode'] == 'student' ? ", SUM(CASE WHEN StudentID=${user['StudentID']} THEN 1 ELSE 0 END) AS Entered"
+            : '') . ' FROM Entries GROUP BY CourseID) WHERE CourseID = :id');
     $statement->bindValue(':id', $id);
     return $data->fetchArray($statement->execute());
 }
@@ -76,11 +79,34 @@ function course_delete($id) {
 }
 
 function course_enter($id) {
+    function preproc($course) {
+        // this is pretty ridiculous but what if?
+        if ($course['CourseEndTime'] < $course['CourseStartTime']) $course['CourseEndTime'] += 10080;
+    }
+
     global $data, $user;
-    $statement = $data->prepare('SELECT CourseStartTime, CourseEndTime FROM Courses WHERE CourseID = :cid;');
-    if (is_string($current = $data->fetchArray($statement))) return $current;
-    $statement = $data->prepare('SELECT CourseStartTime, CourseEndTime FROM Students WHERE StudentID = :sid ' .
-        'NATURAL JOIN Entries NATURAL JOIN Courses ORDER BY CourseStartTime;');
+    $statement = $data->prepare('SELECT CourseID, CourseStartTime, CourseEndTime FROM Courses WHERE CourseID = :cid;');
+    if (is_string($current = $data->fetchArray($statement->execute()))) return $current;
+    preproc($current);
+    // TODO: there is an obvious race condition but let's hope nothing bad ever happens mmmkay?
+    $statement = $data->prepare('SELECT CourseID, CourseStartTime, CourseEndTime FROM Students ' .
+        'NATURAL JOIN Entries NATURAL JOIN Courses WHERE StudentID = :sid ORDER BY CourseStartTime;');
     $statement->bindValue(':cid', $id);
     $statement->bindValue(':sid', $user['StudentID']);
+    if (is_string($courses = $data->executeWithError($statement))) return $courses;
+    $signOut = false;
+    while ($course = $courses->fetchArray(SQLITE3_ASSOC)) {
+        if ($course['CourseID'] == $current['CourseID']) {
+            $signOut = true;
+            break;
+        }
+        preproc($course);
+        if ($current['CourseEndTime'] > $course['CourseStartTime'] &&
+            $current['CourseStartTime'] < $course['CourseEndTime']) return '对不起，您选的课有重合。';
+    }
+    $statement = $data->prepare($signOut ? 'DELETE FROM Entries WHERE CourseID = :cid AND StudentID = :sid'
+        : 'INSERT INTO Entries (CourseID, StudentID) VALUES (:cid, :sid)');
+    $statement->bindValue(':cid', $id);
+    $statement->bindValue(':sid', $user['StudentID']);
+    return $data->executeWithError($statement);
 }
