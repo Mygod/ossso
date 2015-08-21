@@ -49,3 +49,11 @@ function student_list() {
     return $data->fetchArrayAll($data->prepare('SELECT StudentID, StudentName, StudentGender FROM Students;')
         ->execute());
 }
+
+function student_set($name, $value) {
+    global $data, $uid;
+    $statement = $data->prepare("UPDATE Students SET $name = :value WHERE StudentID = :uid;");
+    $statement->bindValue(':uid', $uid);
+    $statement->bindValue(':value', $value);
+    return $data->executeWithError($statement);
+}

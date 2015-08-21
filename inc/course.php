@@ -13,6 +13,13 @@ $data->execStrong('CREATE TABLE IF NOT EXISTS Courses
     CourseStartTime INTEGER NOT NULL,
     CourseEndTime INTEGER NOT NULL,
     CourseStudentCount INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Entries
+(
+    StudentID INTEGER NOT NULL,
+    CourseID INTEGER NOT NULL,
+    PRIMARY KEY (StudentID, CourseID)
 );');
 
 function course_list() {
@@ -66,4 +73,14 @@ function course_delete($id) {
     $statement->bindValue(':uid', $user['TeacherID']);
     if (is_string($msg = $data->executeWithError($statement))) return $msg;
     return $data->changes() ? null : '未找到符合条件的课程！';
+}
+
+function course_enter($id) {
+    global $data, $user;
+    $statement = $data->prepare('SELECT CourseStartTime, CourseEndTime FROM Courses WHERE CourseID = :cid;');
+    if (is_string($current = $data->fetchArray($statement))) return $current;
+    $statement = $data->prepare('SELECT CourseStartTime, CourseEndTime FROM Students WHERE StudentID = :sid ' .
+        'NATURAL JOIN Entries NATURAL JOIN Courses ORDER BY CourseStartTime;');
+    $statement->bindValue(':cid', $id);
+    $statement->bindValue(':sid', $user['StudentID']);
 }
