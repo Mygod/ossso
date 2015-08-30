@@ -3,7 +3,7 @@
         <paper-item>课程设置</paper-item>
         <ossso-course-list teacher="[[teacher]]"></ossso-course-list>
         <paper-item>学生评价</paper-item>
-        <section></section>
+        <section>Coming soon...</section>
         <paper-item>帐户管理</paper-item>
         <section>
             <paper-material card>

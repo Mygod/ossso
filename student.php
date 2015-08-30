@@ -15,7 +15,7 @@
         <paper-item>选择课程</paper-item>
         <ossso-course-list student="[[student]]"></ossso-course-list>
         <paper-item>教师评价</paper-item>
-        <section></section>
+        <section>Coming soon...</section>
     </ossso-page>
 </template>
 <script>

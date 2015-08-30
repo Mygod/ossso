@@ -29,11 +29,15 @@
                 </tr></thead>
                 <tbody>
                 <template is="dom-repeat" items="[[response.courses]]">
-                    <tr hidden$="[[item.deleting]]" on-click="viewDetails">
-                        <td>[[item.CourseName]]</td><td>[[item.TeacherName]]</td><td>[[formatPeriod(item)]]</td>
-                        <td><span>[[item.CourseEntryCount]]</span>/<span>[[item.CourseStudentCount]]</span></td>
+                    <tr hidden$="[[item.deleting]]">
+                        <td on-click="viewDetails">[[item.CourseName]]</td>
+                        <td on-click="viewDetails">[[item.TeacherName]]</td>
+                        <td on-click="viewDetails">[[formatPeriod(item)]]</td>
+                        <td on-click="viewDetails">
+                            <span>[[item.CourseEntryCount]]</span>/<span>[[item.CourseStudentCount]]</span>
+                        </td>
                         <td hidden$="[[!student]]">
-                            <paper-toggle-button checked="[[item.checked]]" disabled="[[canToggle(item.*)]]"
+                            <paper-toggle-button checked="[[item.checked]]" disabled="[[toggleDisabled(item.*)]]"
                                                  on-iron-change="toggleCourse"></paper-toggle-button>
                         </td>
                     </tr>
@@ -88,8 +92,16 @@
                 this.$.detailFetcher.generateRequest();
             },
             responseUpdated: function (record) {
-                var r = /^response.courses.(\d+).Entered$/i.exec(record.path);
+                var r = /^response\.courses\.(\d+)\.Entered?$/i.exec(record.path);
                 if (r) this._setCourseIndex('checked', r[1], record.value > 0);
+                else {
+                    r = /^response\.courses\.(\d+)?$/i.exec(record.path);
+                    if (r) this._setCourseIndex('checked', r[1], record.value.Entered > 0);
+                    else if (record.path == 'response' || record.path == 'response.courses') {
+                        var c = this.response.courses;
+                        for (var i = 0; i < c.length; ++i) this._setCourseIndex('checked', i, c[i].Entered > 0);
+                    }
+                }
             },
             showDetails: function (e) {
                 if (e.detail.response.success) {
@@ -184,28 +196,28 @@
             entered: function (e) {
                 return e > 0;
             },
-            canToggle: function (r) {
+            toggleDisabled: function (r) {
                 var item = r.base;
-                return !item.busy && (item.Entered > 0 || item.CourseEntryCount < item.CourseStudentCount);
+                return item.busy || item.Entered < 1 && item.CourseEntryCount >= item.CourseStudentCount;
             },
             enterResponse: function (e) {
                 this.respond(e);
-                var course = this._findCourse(e.detail.request.body.CourseID);
+                var course = this._findCourse(e.detail.response.course.CourseID);
                 if (!course) return;
                 this._setCourse('busy', course, false);
-                this._setCourse('CourseStudentCount', e.detail.response.course.CourseStudentCount);
+                this._setCourse('CourseEntryCount', course, e.detail.response.course.CourseEntryCount);
                 this._setCourse('Entered', course, e.detail.response.course.Entered);
             },
             enterError: function (e) {
                 this.error(e);
-                var course = this._findCourse(e.detail.request.body.CourseID);
+                var course = this._findCourse(e.detail.response.course.CourseID);
                 if (!course) return;
                 this._setCourse('busy', course, false);
                 this._setCourse('Entered', course, e.detail.response.course.Entered);
             },
             toggleCourse: function (e) {
                 var course = e.model.item;
-                if (!course) return;
+                if (!course || this.toggleDisabled({base: course})) return;
                 this._setCourse('busy', course, true);
                 this.$.enter.body = { CourseID: course.CourseID };
                 this.$.enter.generateRequest();

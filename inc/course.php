@@ -24,11 +24,12 @@ CREATE TABLE IF NOT EXISTS Entries
 
 function course_list() {
     global $data, $user;
-    return $data->fetchArrayAll($data->prepare(
-        'SELECT CourseID, CourseName, TeacherName, CourseStartTime, CourseEndTime, CourseEntryCount, ' .
-        'CourseStudentCount' . ($user['Mode'] == 'student' ? ", Entered" : '') .
-        ' FROM Courses NATURAL LEFT JOIN Teachers NATURAL LEFT JOIN (SELECT COUNT(StudentID) AS CourseEntryCount' .
-        ($user['Mode'] == 'student'
+    return $data->fetchArrayAll($data->prepare('SELECT CourseID, CourseName, TeacherName, CourseStartTime, ' .
+        'CourseEndTime, CASE WHEN CourseEntryCount IS NULL THEN 0 ELSE CourseEntryCount END AS CourseEntryCount, ' .
+        'CourseStudentCount' .
+        ($user['Mode'] == 'student' ? ", CASE WHEN Entered IS NULL THEN 0 ELSE Entered END AS Entered" : '') .
+        ' FROM Courses NATURAL LEFT JOIN Teachers NATURAL LEFT JOIN (SELECT CourseID, COUNT(StudentID) AS ' .
+        'CourseEntryCount' . ($user['Mode'] == 'student'
             ? ", SUM(CASE WHEN StudentID=${user['StudentID']} THEN 1 ELSE 0 END) AS Entered" : '') .
         ' FROM Entries GROUP BY CourseID);')->execute());
 }
@@ -60,9 +61,10 @@ function course_info($query) {
         return $query;
     }
     $statement = $data->prepare('SELECT CourseID, CourseName, TeacherID, TeacherName, CourseObjectives, CourseContent,
-        CourseEvaluation, CourseStartTime, CourseEndTime, CourseEntryCount, CourseStudentCount' . ($user['Mode'] ==
-            'student' ? ', Entered' : '') .
-        ' FROM Courses NATURAL LEFT JOIN Teachers NATURAL LEFT JOIN (SELECT COUNT(StudentID) AS CourseEntryCount' .
+        CourseEvaluation, CourseStartTime, CourseEndTime, ' .
+        'CASE WHEN CourseEntryCount IS NULL THEN 0 ELSE CourseEntryCount END AS CourseEntryCount, CourseStudentCount' .
+        ($user['Mode'] == 'student' ? ', CASE WHEN Entered IS NULL THEN 0 ELSE Entered END As Entered' : '') . ' FROM' .
+        ' Courses NATURAL LEFT JOIN Teachers NATURAL LEFT JOIN (SELECT CourseID, COUNT(StudentID) AS CourseEntryCount' .
         ($user['Mode'] == 'student' ? ", SUM(CASE WHEN StudentID=${user['StudentID']} THEN 1 ELSE 0 END) AS Entered"
             : '') . ' FROM Entries GROUP BY CourseID) WHERE CourseID = :id');
     $statement->bindValue(':id', $id);
@@ -86,6 +88,7 @@ function course_enter($id) {
 
     global $data, $user;
     $statement = $data->prepare('SELECT CourseID, CourseStartTime, CourseEndTime FROM Courses WHERE CourseID = :cid;');
+    $statement->bindValue(':cid', $id);
     if (is_string($current = $data->fetchArray($statement->execute()))) return $current;
     preproc($current);
     // TODO: there is an obvious race condition but let's hope nothing bad ever happens mmmkay?
