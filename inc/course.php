@@ -105,7 +105,7 @@ function course_enter($id) {
         }
         preproc($course);
         if ($current['CourseEndTime'] > $course['CourseStartTime'] &&
-            $current['CourseStartTime'] < $course['CourseEndTime']) return '对不起，您选的课有重合。';
+            $current['CourseStartTime'] < $course['CourseEndTime']) return '对不起，您选的课时间有重合。';
     }
     $statement = $data->prepare($signOut ? 'DELETE FROM Entries WHERE CourseID = :cid AND StudentID = :sid'
         : 'INSERT INTO Entries (CourseID, StudentID) VALUES (:cid, :sid)');

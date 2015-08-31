@@ -2,35 +2,14 @@
 <link rel="import" href="/bower_components/neon-animation/animations/scale-up-animation.html" />
 <link rel="import" href="/bower_components/paper-button/paper-button.html" />
 <link rel="import" href="/bower_components/paper-dialog/paper-dialog.html" />
-<link rel="import" href="/bower_components/paper-menu-button/paper-menu-button.html" />
-<link rel="import" href="/bower_components/paper-time-picker/paper-time-picker.html" />
 <dom-module id="ossso-time-picker">
     <template>
-        <template is="dom-if" if="[[readonly]]">
-            <span>[[formatDay(day)]]</span>
-            <span>[[hour]]</span>:<span>[[_formatMinute(minute)]]</span>
-        </template>
+        <template is="dom-if" if="[[readonly]]"><span>[[display]]</span></template>
         <template is="dom-if" if="[[!readonly]]">
-            <paper-menu-button>
-                <paper-button class="dropdown-trigger">[[formatDay(day)]]</paper-button>
-                <paper-menu class="dropdown-content" selected="{{day}}">
-                    <paper-item>周日</paper-item>
-                    <paper-item>周一</paper-item>
-                    <paper-item>周二</paper-item>
-                    <paper-item>周三</paper-item>
-                    <paper-item>周四</paper-item>
-                    <paper-item>周五</paper-item>
-                    <paper-item>周六</paper-item>
-                </paper-menu>
-            </paper-menu-button>
-            <paper-button on-click="selectTime">
-                <span>[[hour]]</span>:<span>[[_formatMinute(minute)]]</span>
-            </paper-button>
+            <paper-input value="{{display::blur}}" auto-validate error-message="格式无效！缩写格式样例：5 3:45"
+                         pattern="^\s*(周|星期|礼拜)?([日一二三四五六七天0-7])\s*([01]?\d|2[0-3])([:：]?([0-5]\d))?\s*$">
+            </paper-input>
         </template>
-        <paper-dialog id="dialog" with-backdrop
-                      entry-animation="scale-up-animation" exit-animation="scale-down-animation">
-            <paper-time-picker hour="{{hour}}" minute="{{minute}}"></paper-time-picker>
-        </paper-dialog>
     </template>
     <script>
         Polymer({
@@ -42,19 +21,9 @@
                     observer: '_valueChanged',
                     notify: true
                 },
-                day: {
-                    type: Number,
-                    value: 0,
-                    observer: '_updateValue'
-                },
-                hour: {
-                    type: Number,
-                    value: 0,
-                    observer: '_updateValue'
-                },
-                minute: {
-                    type: Number,
-                    value: 0,
+                display: {
+                    type: String,
+                    value: '',
                     observer: '_updateValue'
                 },
                 readonly: {
@@ -62,30 +31,20 @@
                     value: false
                 }
             },
-            formatDay: function (day) {
-                return '周' + '日一二三四五六'[day];
-            },
-            selectTime: function () {
-                this.$.dialog.open();
-            },
-            _update: function (path, val) {
-                if (this.__data__[path] == val) return false;
-                this.__data__[path] = val;
-                return true;
-            },
             _valueChanged: function (val) {
                 if (val == undefined) return;
                 var d = new Date(val * 60000);
-                var c1 = this._update('day', (d.getUTCDay() + 3) % 7), c2 = this._update('hour', d.getUTCHours());
-                this.minute = d.getUTCMinutes();
-                if (c2) this._pathEffector('hour', this.hour);
-                if (c1) this._pathEffector('day', this.day);
+                var m = d.getUTCMinutes();
+                this.display = '周' + '日一二三四五六'[(d.getUTCDay() + 3) % 7] + ' ' + d.getUTCHours() +
+                        ':' + (m < 10 ? '0' : '') + m;
             },
             _updateValue: function () {
-                this.value = (this.day * 24 + this.hour) * 60 + this.minute;
-            },
-            _formatMinute: function (m) {
-                return m < 10 ? '0' + m : m;
+                var r = /^\s*(周|星期|礼拜)?([日一二三四五六七天0-7])\s*([01]?\d|2[0-3])([:：]?([0-5]\d))?\s*$/
+                        .exec(this.display);
+                if (!r) return;
+                var d = '日一二三四五六七'.indexOf(r[2]) % 7;
+                if (d < 0) d = r[2] == '天' ? 0 : parseInt(r[2]);
+                this.value = (d * 24 + parseInt(r[3])) * 60 + parseInt(r[5]);
             }
         });
     </script>

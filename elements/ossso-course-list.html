@@ -37,7 +37,7 @@
                             <span>[[item.CourseEntryCount]]</span>/<span>[[item.CourseStudentCount]]</span>
                         </td>
                         <td hidden$="[[!student]]">
-                            <paper-toggle-button checked="[[item.checked]]" disabled="[[toggleDisabled(item.*)]]"
+                            <paper-toggle-button checked="{{item.checked}}" disabled="[[toggleDisabled(item.*)]]"
                                                  on-iron-change="toggleCourse"></paper-toggle-button>
                         </td>
                     </tr>
@@ -207,19 +207,26 @@
                 if (!course) return;
                 this._setCourse('busy', course, false);
                 this._setCourse('CourseEntryCount', course, e.detail.response.course.CourseEntryCount);
+                this._fallback = true;
                 this._setCourse('Entered', course, e.detail.response.course.Entered);
+                this._fallback = false;
             },
             enterError: function (e) {
                 this.error(e);
                 var course = this._findCourse(e.detail.response.course.CourseID);
                 if (!course) return;
                 this._setCourse('busy', course, false);
+                this._fallback = true;
                 this._setCourse('Entered', course, e.detail.response.course.Entered);
+                this._fallback = false;
             },
             toggleCourse: function (e) {
                 var course = e.model.item;
-                if (!course || this.toggleDisabled({base: course})) return;
+                if (this._fallback || !course || this.toggleDisabled({base: course})) return;
                 this._setCourse('busy', course, true);
+                this._fallback = true;
+                this._setCourse('Entered', course, 1 - course.Entered);
+                this._fallback = false;
                 this.$.enter.body = { CourseID: course.CourseID };
                 this.$.enter.generateRequest();
             },
