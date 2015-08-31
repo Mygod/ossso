@@ -14,7 +14,7 @@ require_once 'inc/user.php';
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="<?= $config->getSiteName() ?>">
     <script src="/bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
-    <link rel="import" href="elements/elements.html">
+    <link rel="import" href="elements/vulcanized.html">
 </head>
 <body unresolved class="fullbleed">
 <?php
