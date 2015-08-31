@@ -37,7 +37,7 @@ function course_list() {
 function course_info($query) {
     global $data, $user;
     $id = isset($query['CourseID']) ? $query['CourseID'] : '';
-    if (isset($query['CourseName'])) {
+    if ($query['CourseName']) {
         if ($user['Mode'] == 'teacher') {
             $statement = $data->prepare($id
                 ? 'UPDATE Courses SET CourseName = :cn, CourseObjectives = :co, CourseContent = :cc, ' .
@@ -112,4 +112,17 @@ function course_enter($id) {
     $statement->bindValue(':cid', $id);
     $statement->bindValue(':sid', $user['StudentID']);
     return $data->executeWithError($statement);
+}
+
+function course_export($id) {
+    global $data, $user;
+    $statement = $data->prepare('SELECT TeacherID FROM Courses WHERE CourseID = :id;');
+    $statement->bindValue(':id', $id);
+    if (is_string($r = $data->fetchArray($statement->execute()))) fatal_alert($r);
+    if ($user['Mode'] !== 'teacher' || $r['TeacherID'] !== $user['TeacherID']) fatal_alert('您无权执行此操作！');
+    $statement = $data->prepare('SELECT StudentID, StudentName, StudentGender, StudentIntroduction FROM Entries '.
+        'NATURAL LEFT JOIN Students WHERE CourseID = :id;');
+    $statement->bindValue(':id', $id);
+    if (is_string($r = $data->fetchArrayAll($statement->execute()))) fatal_alert($r);
+    return $r;
 }
